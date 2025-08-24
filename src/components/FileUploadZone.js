@@ -1,5 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { validateVideoFile, getFileSizeInMB, getVideoMetadata, formatDuration } from '../utils/videoOptimizer';
+import { createFFmpeg, fetchFile } from '@ffmpeg/ffmpeg';
+import { convertToMp4 } from '../utils/convertToMp4';
+
+const ffmpeg = createFFmpeg({ log: true });
 
 const FileUploadZone = ({ 
   videoFile, 
@@ -22,6 +26,19 @@ const FileUploadZone = ({
       setVideoInfo(null);
     }
   }, [videoFile]);
+
+  const handleFileSelect = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (file.type !== 'video/mp4') {
+      // Optionally show a loading indicator here
+      const mp4File = await convertToMp4(file);
+      onFileSelect({ target: { files: [mp4File] } });
+    } else {
+      onFileSelect(e);
+    }
+  };
+
   return (
     <div
       style={{
@@ -43,7 +60,7 @@ const FileUploadZone = ({
         ref={fileInputRef}
         type="file"
         accept="video/*"
-        onChange={onFileSelect}
+        onChange={handleFileSelect}
         style={{ display: 'none' }}
         required
       />
