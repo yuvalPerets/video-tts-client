@@ -13,6 +13,7 @@ const FileUploadZone = ({
   validationErrors = []
 }) => {
   const [videoInfo, setVideoInfo] = useState(null);
+  const [isConverting, setIsConverting] = useState(false); // NEW
 
   useEffect(() => {
     if (videoFile) {
@@ -28,9 +29,14 @@ const FileUploadZone = ({
     const file = e.target.files[0];
     if (!file) return;
     if (file.type !== 'video/mp4') {
-      // Optionally show a loading indicator here
-      const mp4File = await convertToMp4(file);
-      onFileSelect({ target: { files: [mp4File] } });
+      setIsConverting(true); // NEW
+      try {
+        const mp4File = await convertToMp4(file);
+        onFileSelect({ target: { files: [mp4File] } });
+      } catch (err) {
+        alert('Video conversion failed. Please upload an MP4 file.');
+      }
+      setIsConverting(false); // NEW
     } else {
       onFileSelect(e);
     }
@@ -63,6 +69,12 @@ const FileUploadZone = ({
       />
       
       <div style={{ marginBottom: '1rem', fontSize: '2rem' }}>📁</div>
+      
+      {isConverting && (
+        <div style={{ color: '#8b5cf6', marginBottom: '1rem' }}>
+          Converting your video to MP4. Please wait...
+        </div>
+      )}
       
       {videoFile ? (
         <div>
