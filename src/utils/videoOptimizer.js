@@ -4,7 +4,7 @@ export const VIDEO_LIMITS = {
   MAX_DURATION: 300, // 5 minutes
   MAX_RESOLUTION: 1920, // 1080p max
   COMPRESSION_QUALITY: 0.8, // 80% quality
-  SUPPORTED_FORMATS: ['video/mp4', 'video/webm', 'video/avi', 'video/mov']
+  SUPPORTED_FORMATS: []
 };
 
 export const QUALITY_PRESETS = {
