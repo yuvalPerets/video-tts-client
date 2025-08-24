@@ -1,5 +1,7 @@
 import { useState, useRef } from 'react';
 import axios from 'axios';
+import { validateVideoFile, compressVideo, VIDEO_LIMITS } from '../utils/videoOptimizer';
+import { VideoUsageTracker, AnalyticsTracker } from '../utils/videoUsageTracker';
 
 export const useVideoUpload = () => {
   const [videoFile, setVideoFile] = useState(null);
@@ -12,6 +14,8 @@ export const useVideoUpload = () => {
   const [downloading, setDownloading] = useState(false);
   const [message, setMessage] = useState("");
   const [isDragOver, setIsDragOver] = useState(false);
+  const [selectedQuality, setSelectedQuality] = useState('MEDIUM');
+  const [validationErrors, setValidationErrors] = useState([]);
   const fileInputRef = useRef(null);
 
   const handleDragOver = (e) => {
@@ -29,19 +33,32 @@ export const useVideoUpload = () => {
     setIsDragOver(false);
     
     const files = e.dataTransfer.files;
-    if (files.length > 0 && files[0].type.startsWith('video/')) {
-      setVideoFile(files[0]);
-      alert(`Selected: ${files[0].name}`);
-    } else {
-      alert("Please select a video file");
+    if (files.length > 0) {
+      const file = files[0];
+      const validation = validateVideoFile(file);
+      
+      if (validation.isValid) {
+        setVideoFile(file);
+        setValidationErrors([]);
+      } else {
+        setValidationErrors(validation.errors);
+        setVideoFile(null);
+      }
     }
   };
 
   const handleFileSelect = (e) => {
     const file = e.target.files?.[0];
     if (file) {
-      setVideoFile(file);
-      alert(`Selected: ${file.name}`);
+      const validation = validateVideoFile(file);
+      
+      if (validation.isValid) {
+        setVideoFile(file);
+        setValidationErrors([]);
+      } else {
+        setValidationErrors(validation.errors);
+        setVideoFile(null);
+      }
     }
   };
 
@@ -58,14 +75,21 @@ export const useVideoUpload = () => {
       return;
     }
 
-    const formData = new FormData();
-    formData.append("video", videoFile);
-    formData.append("text", text);
-
     try {
       setDownloading(true);
       resetProgress();
       setMessage("📤 Uploading video...");
+
+      // Track video upload
+      AnalyticsTracker.trackVideoUpload(videoFile.size, 0); // Duration will be updated later
+      AnalyticsTracker.trackProcessingStart(selectedQuality);
+
+      const formData = new FormData();
+      formData.append("video", videoFile);
+      formData.append("text", text);
+      formData.append("quality", selectedQuality);
+
+      const startTime = Date.now();
 
       const response = await axios.post(
         "https://video-tts-backend.onrender.com/upload",
@@ -88,8 +112,16 @@ export const useVideoUpload = () => {
         }
       );
 
+      const processingTime = Date.now() - startTime;
+
       setProgress(prev => ({ ...prev, complete: true }));
       setMessage("⬇️ Downloading processed video...");
+
+      // Track processing completion
+      AnalyticsTracker.trackProcessingComplete(processingTime);
+
+      // Increment usage count
+      VideoUsageTracker.incrementUsage();
 
       // Create download
       const blob = new Blob([response.data], { type: "video/mp4" });
@@ -111,6 +143,25 @@ export const useVideoUpload = () => {
       setDownloading(false);
       setTimeout(() => resetProgress(), 3000);
     }
+  };
+
+  return {
+    videoFile,
+    text,
+    progress,
+    downloading,
+    message,
+    isDragOver,
+    selectedQuality,
+    validationErrors,
+    fileInputRef,
+    setText,
+    setSelectedQuality,
+    handleDragOver,
+    handleDragLeave,
+    handleDrop,
+    handleFileSelect,
+    handleUpload
   };
 
   return {
