@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { validateVideoFile, getFileSizeInMB, getVideoMetadata, formatDuration } from '../utils/videoOptimizer';
-import { convertToMp4 } from '../utils/convertToMp4';
 
 const FileUploadZone = ({ 
   videoFile, 
@@ -13,7 +12,6 @@ const FileUploadZone = ({
   validationErrors = []
 }) => {
   const [videoInfo, setVideoInfo] = useState(null);
-  const [isConverting, setIsConverting] = useState(false); // NEW
 
   useEffect(() => {
     if (videoFile) {
@@ -25,21 +23,10 @@ const FileUploadZone = ({
     }
   }, [videoFile]);
 
-  const handleFileSelect = async (e) => {
+  const handleFileSelect = (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    if (file.type !== 'video/mp4') {
-      setIsConverting(true); // NEW
-      try {
-        const mp4File = await convertToMp4(file);
-        onFileSelect({ target: { files: [mp4File] } });
-      } catch (err) {
-        alert('Video conversion failed. Please upload an MP4 file.');
-      }
-      setIsConverting(false); // NEW
-    } else {
-      onFileSelect(e);
-    }
+    onFileSelect(e);
   };
 
   return (
@@ -70,18 +57,12 @@ const FileUploadZone = ({
       
       <div style={{ marginBottom: '1rem', fontSize: '2rem' }}>📁</div>
       
-      {isConverting && (
-        <div style={{ color: '#8b5cf6', marginBottom: '1rem' }}>
-          Converting your video to MP4. Please wait...
-        </div>
-      )}
-      
       {videoFile ? (
         <div>
           <p style={{ color: '#34d399', fontWeight: '500', marginBottom: '0.5rem' }}>
             ✓ {videoFile.name}
           </p>
-                                <p style={{ color: '#9ca3af', fontSize: '0.875rem' }}>
+          <p style={{ color: '#9ca3af', fontSize: '0.875rem' }}>
             {getFileSizeInMB(videoFile.size)} MB
             {videoInfo && (
               <span style={{ marginLeft: '1rem' }}>
@@ -95,12 +76,12 @@ const FileUploadZone = ({
           <p style={{ fontSize: '1.125rem', fontWeight: '500', color: 'white', marginBottom: '0.5rem' }}>
             Drop your video here or click to browse
           </p>
-                      <p style={{ color: '#9ca3af', fontSize: '0.875rem' }}>
-              Supports MP4, MOV, AVI and other video formats
-            </p>
-            <p style={{ color: '#9ca3af', fontSize: '0.75rem', marginTop: '0.5rem' }}>
-              Max file size: 50MB • Max duration: 5 minutes
-            </p>
+          <p style={{ color: '#9ca3af', fontSize: '0.875rem' }}>
+            Supports MP4, MOV, AVI and other video formats
+          </p>
+          <p style={{ color: '#9ca3af', fontSize: '0.75rem', marginTop: '0.5rem' }}>
+            Max file size: 50MB • Max duration: 5 minutes
+          </p>
         </div>
       )}
       
