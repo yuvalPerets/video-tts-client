@@ -39,3 +39,13 @@
     ]
   }
 }
+
+// Do NOT import at the top level if you use SSR or Vercel
+// import { createFFmpeg, fetchFile } from '@ffmpeg/ffmpeg';
+
+// Instead, import inside your function/component:
+const handleFileSelect = async (e) => {
+  const { createFFmpeg, fetchFile } = await import('@ffmpeg/ffmpeg');
+  const ffmpeg = createFFmpeg({ log: true });
+  // ...rest of your code...
+};

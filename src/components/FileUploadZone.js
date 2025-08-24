@@ -1,9 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { validateVideoFile, getFileSizeInMB, getVideoMetadata, formatDuration } from '../utils/videoOptimizer';
-import { createFFmpeg, fetchFile } from '@ffmpeg/ffmpeg';
 import { convertToMp4 } from '../utils/convertToMp4';
-
-const ffmpeg = createFFmpeg({ log: true });
 
 const FileUploadZone = ({ 
   videoFile, 
