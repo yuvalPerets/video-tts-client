@@ -5,26 +5,45 @@ import AdSidebar from "./components/AdSidebar";
 import AdModal from "./components/AdModal";
 import UsageIndicator from "./components/UsageIndicator";
 import { AnalyticsTracker } from "./utils/videoUsageTracker";
+import { GoogleLogin, GoogleLogout } from "react-google-login"; // Add this
+
+const CLIENT_ID = "YOUR_GOOGLE_CLIENT_ID"; // Replace with your Google OAuth client ID
 
 function App() {
   const [showAdModal, setShowAdModal] = useState(false);
   const [pendingUpload, setPendingUpload] = useState(null);
   const [isMobile, setIsMobile] = useState(false);
+  const [user, setUser] = useState(null); // Track logged-in user
 
   useEffect(() => {
-    // Track session start
     AnalyticsTracker.trackSession();
 
-    // Check screen size for responsive design
+    // Responsive design
     const checkScreenSize = () => {
       setIsMobile(window.innerWidth < 1200);
     };
-
     checkScreenSize();
     window.addEventListener('resize', checkScreenSize);
 
+    // Daily usage reset if logged in
+    if (user) {
+      AnalyticsTracker.resetUsageIfNeeded(true);
+    }
+
     return () => window.removeEventListener('resize', checkScreenSize);
-  }, []);
+  }, [user]);
+
+  const handleLoginSuccess = (response) => {
+    setUser(response.profileObj);
+  };
+
+  const handleLoginFailure = () => {
+    setUser(null);
+  };
+
+  const handleLogout = () => {
+    setUser(null);
+  };
 
   const handleUploadRequest = (uploadData) => {
     setPendingUpload(uploadData);
@@ -34,7 +53,6 @@ function App() {
   const handleAdComplete = () => {
     setShowAdModal(false);
     if (pendingUpload) {
-      // Continue with the upload
       pendingUpload.onContinue();
       setPendingUpload(null);
     }
@@ -45,7 +63,6 @@ function App() {
     setPendingUpload(null);
   };
 
-  // Responsive layout styles
   const mainContentStyles = {
     minHeight: '100vh',
     padding: isMobile ? '1rem' : '2rem',
@@ -58,6 +75,28 @@ function App() {
 
   return (
     <div className="App">
+      {/* Google Login/Logout */}
+      <div style={{ position: "absolute", top: 10, right: 10 }}>
+        {!user ? (
+          <GoogleLogin
+            clientId={CLIENT_ID}
+            buttonText="Login with Google"
+            onSuccess={handleLoginSuccess}
+            onFailure={handleLoginFailure}
+            cookiePolicy={'single_host_origin'}
+          />
+        ) : (
+          <div>
+            <span>Welcome, {user.name}</span>
+            <GoogleLogout
+              clientId={CLIENT_ID}
+              buttonText="Logout"
+              onLogoutSuccess={handleLogout}
+            />
+          </div>
+        )}
+      </div>
+
       {/* Sidebar Ads - Hidden on mobile */}
       {!isMobile && (
         <>
@@ -70,6 +109,7 @@ function App() {
       <div style={mainContentStyles}>
         <UploadForm 
           onUploadRequest={handleUploadRequest}
+          user={user} // Pass user to child if needed
         />
       </div>
 

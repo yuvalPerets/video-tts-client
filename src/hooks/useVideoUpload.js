@@ -75,17 +75,26 @@ export const useVideoUpload = () => {
       return;
     }
 
+    // Convert .mov to .mp4 before upload
+    let fileToUpload = videoFile;
+    if (videoFile.name.endsWith('.mov')) {
+      setMessage("Converting MOV to MP4...");
+      const { convertToMp4 } = await import('../utils/convertToMp4');
+      fileToUpload = await convertToMp4(videoFile);
+      setMessage("Conversion complete. Uploading video...");
+    }
+
     try {
       setDownloading(true);
       resetProgress();
       setMessage("📤 Uploading video...");
 
       // Track video upload
-      AnalyticsTracker.trackVideoUpload(videoFile.size, 0); // Duration will be updated later
+      AnalyticsTracker.trackVideoUpload(fileToUpload.size, 0); // Duration will be updated later
       AnalyticsTracker.trackProcessingStart(selectedQuality);
 
       const formData = new FormData();
-      formData.append("video", videoFile);
+      formData.append("video", fileToUpload);
       formData.append("text", text);
       formData.append("quality", selectedQuality);
 
