@@ -6,6 +6,7 @@ import AdModal from "./components/AdModal";
 import UsageIndicator from "./components/UsageIndicator";
 import { AnalyticsTracker } from "./utils/videoUsageTracker";
 import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
+import jwt_decode from "jwt-decode";
 
 const CLIENT_ID = "YOUR_GOOGLE_CLIENT_ID"; // Replace with your Google OAuth client ID
 
