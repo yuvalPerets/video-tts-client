@@ -5,7 +5,7 @@ import AdSidebar from "./components/AdSidebar";
 import AdModal from "./components/AdModal";
 import UsageIndicator from "./components/UsageIndicator";
 import { AnalyticsTracker } from "./utils/videoUsageTracker";
-import { GoogleOAuthProvider, GoogleLogin, GoogleLogout } from '@react-oauth/google';
+import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
 
 const CLIENT_ID = "YOUR_GOOGLE_CLIENT_ID"; // Replace with your Google OAuth client ID
 
@@ -88,11 +88,7 @@ function App() {
           ) : (
             <div>
               <span>Welcome, {user.name}</span>
-              <GoogleLogout
-                clientId={CLIENT_ID}
-                buttonText="Logout"
-                onLogoutSuccess={handleLogout}
-              />
+              <button onClick={handleLogout}>Logout</button>
             </div>
           )}
         </div>
