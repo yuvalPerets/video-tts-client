@@ -5,7 +5,7 @@ import AdSidebar from "./components/AdSidebar";
 import AdModal from "./components/AdModal";
 import UsageIndicator from "./components/UsageIndicator";
 import { AnalyticsTracker } from "./utils/videoUsageTracker";
-import { GoogleLogin, GoogleLogout } from "react-google-login"; // Add this
+import { GoogleOAuthProvider, GoogleLogin, GoogleLogout } from '@react-oauth/google';
 
 const CLIENT_ID = "YOUR_GOOGLE_CLIENT_ID"; // Replace with your Google OAuth client ID
 
@@ -33,8 +33,10 @@ function App() {
     return () => window.removeEventListener('resize', checkScreenSize);
   }, [user]);
 
-  const handleLoginSuccess = (response) => {
-    setUser(response.profileObj);
+  const handleLoginSuccess = (credentialResponse) => {
+    // Decode the credential response to get user info
+    const userObject = jwt_decode(credentialResponse.credential);
+    setUser(userObject);
   };
 
   const handleLoginFailure = () => {
@@ -74,52 +76,51 @@ function App() {
   };
 
   return (
-    <div className="App">
-      {/* Google Login/Logout */}
-      <div style={{ position: "absolute", top: 10, right: 10 }}>
-        {!user ? (
-          <GoogleLogin
-            clientId={CLIENT_ID}
-            buttonText="Login with Google"
-            onSuccess={handleLoginSuccess}
-            onFailure={handleLoginFailure}
-            cookiePolicy={'single_host_origin'}
-          />
-        ) : (
-          <div>
-            <span>Welcome, {user.name}</span>
-            <GoogleLogout
-              clientId={CLIENT_ID}
-              buttonText="Logout"
-              onLogoutSuccess={handleLogout}
+    <GoogleOAuthProvider clientId={CLIENT_ID}>
+      <div className="App">
+        {/* Google Login/Logout */}
+        <div style={{ position: "absolute", top: 10, right: 10 }}>
+          {!user ? (
+            <GoogleLogin
+              onSuccess={handleLoginSuccess}
+              onError={handleLoginFailure}
             />
-          </div>
-        )}
-      </div>
+          ) : (
+            <div>
+              <span>Welcome, {user.name}</span>
+              <GoogleLogout
+                clientId={CLIENT_ID}
+                buttonText="Logout"
+                onLogoutSuccess={handleLogout}
+              />
+            </div>
+          )}
+        </div>
 
-      {/* Sidebar Ads - Hidden on mobile */}
-      {!isMobile && (
-        <>
-          <AdSidebar position="left" />
-          <AdSidebar position="right" />
-        </>
-      )}
-      
-      {/* Main Content */}
-      <div style={mainContentStyles}>
-        <UploadForm 
-          onUploadRequest={handleUploadRequest}
-          user={user} // Pass user to child if needed
+        {/* Sidebar Ads - Hidden on mobile */}
+        {!isMobile && (
+          <>
+            <AdSidebar position="left" />
+            <AdSidebar position="right" />
+          </>
+        )}
+        
+        {/* Main Content */}
+        <div style={mainContentStyles}>
+          <UploadForm 
+            onUploadRequest={handleUploadRequest}
+            user={user} // Pass user to child if needed
+          />
+        </div>
+
+        {/* Ad Modal */}
+        <AdModal 
+          isOpen={showAdModal}
+          onAdComplete={handleAdComplete}
+          onClose={handleAdClose}
         />
       </div>
-
-      {/* Ad Modal */}
-      <AdModal 
-        isOpen={showAdModal}
-        onAdComplete={handleAdComplete}
-        onClose={handleAdClose}
-      />
-    </div>
+    </GoogleOAuthProvider>
   );
 }
 
