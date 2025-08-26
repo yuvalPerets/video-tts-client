@@ -6,7 +6,7 @@ import AdModal from "./components/AdModal";
 import UsageIndicator from "./components/UsageIndicator";
 import { AnalyticsTracker } from "./utils/videoUsageTracker";
 import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
-import jwt_decode from "jwt-decode";
+import { jwtDecode } from "jwt-decode";
 
 const CLIENT_ID = "YOUR_GOOGLE_CLIENT_ID"; // Replace with your Google OAuth client ID
 
@@ -36,7 +36,7 @@ function App() {
 
   const handleLoginSuccess = (credentialResponse) => {
     // Decode the credential response to get user info
-    const userObject = jwt_decode(credentialResponse.credential);
+    const userObject = jwtDecode(credentialResponse.credential);
     setUser(userObject);
   };
 
